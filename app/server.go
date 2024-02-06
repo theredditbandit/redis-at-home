@@ -11,6 +11,7 @@ func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 
 	l, err := net.Listen("tcp", "0.0.0.0:6379")
+	defaultPong := "+PONG\r\n"
 	if err != nil {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
@@ -23,17 +24,16 @@ func main() {
 
 	data := make([]byte, 1024) // buffer to store incoming data
 
-	_, err = conn.Read(data)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	resp := "+PONG\r\n"
-
-	_, err = conn.Write([]byte(resp))
-
-	if err != nil {
-		fmt.Println(err)
+    for {
+		_, err = conn.Read(data)
+		if err != nil {
+			fmt.Println("Error reading:", err.Error())
+            break
+		}
+		_, err = conn.Write([]byte(defaultPong))
+		if err != nil {
+			fmt.Println("Error sending data:", err.Error())
+		}
 	}
 
 }
