@@ -2,23 +2,21 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
-	// Uncomment this block to pass the first stage
 	"net"
 	"os"
 )
 
 func main() {
-	// You can use print statements as follows for debugging, they'll be visible when running tests.
-
-	l, err := net.Listen("tcp", "0.0.0.0:6379")
+	listner, err := net.Listen("tcp", "0.0.0.0:6379")
 	var wg sync.WaitGroup
 	if err != nil {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
 	}
 	for {
-		conn, err := l.Accept()
+		conn, err := listner.Accept()
 		if err != nil {
 			fmt.Println("Error accepting connection: ", err.Error())
 			break
@@ -30,7 +28,6 @@ func main() {
 }
 
 func handleClient(conn net.Conn, wg *sync.WaitGroup) {
-	defaultPong := "+PONG\r\n"
 	defer conn.Close()
 	defer wg.Done()
 	data := make([]byte, 1024) // buffer to store incoming data
@@ -40,9 +37,30 @@ func handleClient(conn net.Conn, wg *sync.WaitGroup) {
 			fmt.Println("Error reading:", err.Error())
 			break
 		}
-		_, err = conn.Write([]byte(defaultPong))
+		resp := respHandler(data)
+		_, err = conn.Write(resp)
 		if err != nil {
 			fmt.Println("Error sending data:", err.Error())
 		}
+	}
+}
+
+func respHandler(data []byte) []byte {
+	defaultPong := "+PONG\r\n"
+    d := string(data)
+	if strings.Contains(strings.ToLower(d), "ping") {
+		return []byte(defaultPong)
+	} else if strings.Contains(strings.ToLower(d), "echo") {
+        semiclean := strings.Split(d, "\r\n")
+        var clean []string
+        for i := 1; i < len(semiclean); i++ {
+            if !strings.HasPrefix(semiclean[i],"$") {
+                clean = append(clean, semiclean[i])
+            }
+        }
+        msg := fmt.Sprintf("+%v\r\n",clean[1])
+		return []byte(msg)
+	} else {
+		return []byte("+OK\r\n")
 	}
 }
