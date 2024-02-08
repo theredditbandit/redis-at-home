@@ -1,8 +1,19 @@
-[![progress-banner](https://backend.codecrafters.io/progress/redis/6abf1a82-6640-4916-bfa7-e8f7371b4ffa)](https://app.codecrafters.io/users/theredditbandit?r=2qF)
+# Redis at home
 
-This is a starting point for Go solutions to the
-["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis).
+![for_exceptional_broski](https://github.com/theredditbandit/redis-at-home/assets/85390033/17cec56f-1ae6-46c0-b19e-99222e8ec942)
 
-In this challenge, you'll build a toy Redis clone that's capable of handling
-basic commands like `PING`, `SET` and `GET`. Along the way we'll learn about
-event loops, the Redis protocol and more.
+
+
+# Features
+
+- Full support for the [PING](https://redis.io/commands/ping/) command
+- Full support for the [ECHO](https://redis.io/commands/echo/) command
+- partial support for the [SET](https://redis.io/commands/set/) command
+    - PX flag is supported
+- Full support for the [GET](https://redis.io/commands/get/) command
+
+
+# TODO
+ - RDB persistance
+ - add video recording to readme
+ - upload stats from redis-benchmark comparing this implementation with actual redis
