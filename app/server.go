@@ -116,8 +116,8 @@ func kvHandler(d datastream) {
 			if ok {
 				d.resp <- val
 			} else {
-                d.resp <- "(nil)"
-            }
+				d.resp <- "(nil)"
+			}
 		}
 	}
 
