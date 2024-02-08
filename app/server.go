@@ -14,6 +14,7 @@ type datastream struct {
 	set  chan string
 	get  chan string
 	resp chan string
+	del  chan string
 }
 
 func main() {
@@ -25,6 +26,7 @@ func main() {
 		set:  make(chan string, 2),
 		get:  make(chan string),
 		resp: make(chan string),
+		del:  make(chan string),
 	}
 	go kvHandler(d)
 	if err != nil {
@@ -56,7 +58,8 @@ func handleClient(conn net.Conn, wg *sync.WaitGroup, d datastream) {
 			}
 			fmt.Println("Error reading:", err.Error())
 		}
-		resp := respHandler(data, d)
+		resp := respHandler(data, d, wg)
+
 		_, err = conn.Write(resp)
 		if err != nil {
 			fmt.Println("Error sending data:", err.Error())
@@ -65,25 +68,34 @@ func handleClient(conn net.Conn, wg *sync.WaitGroup, d datastream) {
 }
 
 // respHandler responsible for reading input and generating a response
-func respHandler(data []byte, dstream datastream) []byte {
+func respHandler(data []byte, dstream datastream, wg *sync.WaitGroup) []byte {
 	defaultPong := "+PONG\r\n"
 	d := string(data)
-	clean := arrayParse(d)
+	parsed := parseInput(d)
 	if strings.Contains(strings.ToLower(d), "ping") {
 		return []byte(defaultPong)
 	} else if strings.Contains(strings.ToLower(d), "echo") {
-		msg := fmt.Sprintf("+%v\r\n", clean[1])
+		msg := fmt.Sprintf("+%v\r\n", parsed[1])
 		return []byte(msg)
 	} else if strings.Contains(strings.ToLower(d), "set") {
-		key := clean[1]
-		value := clean[2]
-		dstream.set <- key
-		dstream.set <- value
+		key := parsed[1]
+		value := parsed[2]
+		switch {
+		case strings.Contains(strings.ToLower(d), "px"):
+			expiry := parsed[4]
+			go setExpiry(key, value, dstream, expiry, wg)
+		default:
+			dstream.set <- key
+			dstream.set <- value
+		}
 		return []byte("+OK\r\n")
 	} else if strings.Contains(strings.ToLower(d), "get") {
-		key := clean[1]
+		key := parsed[1]
 		dstream.get <- key
 		val := <-dstream.resp
+		if strings.Contains(val, "-1") {
+			return []byte(val)
+		}
 		msg := fmt.Sprintf("+%v\r\n", val)
 		return []byte(msg)
 	} else {
@@ -91,21 +103,10 @@ func respHandler(data []byte, dstream datastream) []byte {
 	}
 }
 
-// arrayParse cleans the given resp array and returns a go array
-func arrayParse(d string) []string {
-	semiclean := strings.Split(d, "\r\n")
-	var clean []string
-	for i := 1; i < len(semiclean); i++ {
-		if !strings.HasPrefix(semiclean[i], "$") {
-			clean = append(clean, semiclean[i])
-		}
-	}
-	return clean
-}
-
 // kvHandler responsible for maintaining a dictionary of key value pairs
 func kvHandler(d datastream) {
 	redis := make(map[string]string)
+	redisBkp := make(map[string]string)
 	for {
 		select {
 		case k := <-d.set:
@@ -116,9 +117,14 @@ func kvHandler(d datastream) {
 			if ok {
 				d.resp <- val
 			} else {
-				d.resp <- "(nil)"
+				d.resp <- "$-1\r\n"
+			}
+		case k := <-d.del:
+			val, ok := redis[k]
+			if ok {
+				redisBkp[k] = val
+				delete(redis, k)
 			}
 		}
 	}
-
 }
