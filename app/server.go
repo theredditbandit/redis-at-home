@@ -39,7 +39,7 @@ func main() {
 		resp: make(chan string),
 		del:  make(chan string),
 	}
-	go kvHandler(d)
+	go kvHandler(d) // start the kvhandler goroutine
 	if err != nil {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)

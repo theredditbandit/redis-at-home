@@ -12,15 +12,16 @@ import (
 func parseInput(d string) (string, []string) {
 	semiclean := strings.Split(d, "\r\n")
 	var cmd string
+	var cmdFound bool
 	supportedCmds := map[string]struct{}{"ping": {}, "echo": {}, "set": {}, "get": {}, "config": {}}
 	var clean []string
 	for i := 1; i < len(semiclean); i++ {
 		if !strings.HasPrefix(semiclean[i], "$") {
 			w := strings.ToLower(semiclean[i])
 			clean = append(clean, w)
-
-			if _, ok := supportedCmds[w]; ok {
+			if _, ok := supportedCmds[w]; ok && !cmdFound {
 				cmd = w
+				cmdFound = true
 			}
 		}
 	}
