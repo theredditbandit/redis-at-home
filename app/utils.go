@@ -9,19 +9,26 @@ import (
 )
 
 // parseInput cleans the given resp array and returns a go array
-func parseInput(d string) []string {
+func parseInput(d string) (string, []string) {
 	semiclean := strings.Split(d, "\r\n")
+	var cmd string
+	supportedCmds := map[string]struct{}{"ping": {}, "echo": {}, "set": {}, "get": {}, "config": {}}
 	var clean []string
 	for i := 1; i < len(semiclean); i++ {
 		if !strings.HasPrefix(semiclean[i], "$") {
-			clean = append(clean, semiclean[i])
+			w := strings.ToLower(semiclean[i])
+			clean = append(clean, w)
+
+			if _, ok := supportedCmds[w]; ok {
+				cmd = w
+			}
 		}
 	}
-	return clean
+	return cmd, clean
 }
 
 func setExpiry(key string, val string, d datastream, interval string, wg *sync.WaitGroup) {
-    defer wg.Done()
+	defer wg.Done()
 	d.set <- key
 	d.set <- val
 	// sleep for internval miliseconds

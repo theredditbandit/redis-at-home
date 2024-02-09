@@ -2,11 +2,11 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"net"
 	"os"
-	"strings"
 	"sync"
 )
 
@@ -17,7 +17,18 @@ type datastream struct {
 	del  chan string
 }
 
+var dirvar string
+var fName string
+
 func main() {
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	flag.StringVar(&dirvar, "dir", cwd, "directory")
+	flag.StringVar(&fName, "dbfilename", "dump.rdb", "name of the dump file")
+	flag.Parse()
 	ip := "0.0.0.0:6379"
 	listner, err := net.Listen("tcp", ip)
 	fmt.Printf("Listening on : %v\n", ip)
@@ -66,43 +77,6 @@ func handleClient(conn net.Conn, wg *sync.WaitGroup, d datastream) {
 		}
 	}
 }
-
-// respHandler responsible for reading input and generating a response
-func respHandler(data []byte, dstream datastream, wg *sync.WaitGroup) []byte {
-	defaultPong := "+PONG\r\n"
-	d := string(data)
-	parsed := parseInput(d)
-	if strings.Contains(strings.ToLower(d), "ping") {
-		return []byte(defaultPong)
-	} else if strings.Contains(strings.ToLower(d), "echo") {
-		msg := fmt.Sprintf("+%v\r\n", parsed[1])
-		return []byte(msg)
-	} else if strings.Contains(strings.ToLower(d), "set") {
-		key := parsed[1]
-		value := parsed[2]
-		switch {
-		case strings.Contains(strings.ToLower(d), "px"):
-			expiry := parsed[4]
-			go setExpiry(key, value, dstream, expiry, wg)
-		default:
-			dstream.set <- key
-			dstream.set <- value
-		}
-		return []byte("+OK\r\n")
-	} else if strings.Contains(strings.ToLower(d), "get") {
-		key := parsed[1]
-		dstream.get <- key
-		val := <-dstream.resp
-		if strings.Contains(val, "-1") {
-			return []byte(val)
-		}
-		msg := fmt.Sprintf("+%v\r\n", val)
-		return []byte(msg)
-	} else {
-		return []byte("+OK\r\n")
-	}
-}
-
 // kvHandler responsible for maintaining a dictionary of key value pairs
 func kvHandler(d datastream) {
 	redis := make(map[string]string)
