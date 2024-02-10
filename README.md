@@ -15,6 +15,15 @@
 
 # TODO
  - Write tests for existing commands
- - RDB persistance
+ - add the following commands
+    -EXISTS - check if a key is present.
+    -DEL - delete one or more keys.
+    -INCR - increment a stored number by one.
+    -DECR - decrement a stored number by one.
+    -LPUSH - insert all the values at the head of a list.
+    -RPUSH - insert all the values at the tail of a list.
+    -SAVE - save the database state to disk, you should also implement load on startup alongside this.
+    -FLUSHDB - flush the database.
+    -HSET - set a field to a value
  - add video recording to readme
  - upload stats from redis-benchmark comparing this implementation with actual redis
