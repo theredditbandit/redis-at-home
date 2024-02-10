@@ -14,6 +14,7 @@
 
 
 # TODO
+ - Write tests for existing commands
  - RDB persistance
  - add video recording to readme
  - upload stats from redis-benchmark comparing this implementation with actual redis
