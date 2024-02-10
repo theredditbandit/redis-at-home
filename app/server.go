@@ -19,6 +19,7 @@ type datastream struct {
 
 var dirvar string
 var fName string
+var port int
 
 func main() {
 	cwd, err := os.Getwd()
@@ -28,8 +29,9 @@ func main() {
 	}
 	flag.StringVar(&dirvar, "dir", cwd, "directory")
 	flag.StringVar(&fName, "dbfilename", "dump.rdb", "name of the dump file")
+	flag.IntVar(&port, "port", 6379, "port")
 	flag.Parse()
-	ip := "0.0.0.0:6379"
+	ip := fmt.Sprintf("127.0.0.1:%d", port)
 	listner, err := net.Listen("tcp", ip)
 	fmt.Printf("Listening on : %v\n", ip)
 	var wg sync.WaitGroup
@@ -77,6 +79,7 @@ func handleClient(conn net.Conn, wg *sync.WaitGroup, d datastream) {
 		}
 	}
 }
+
 // kvHandler responsible for maintaining a dictionary of key value pairs
 func kvHandler(d datastream) {
 	redis := make(map[string]string)
