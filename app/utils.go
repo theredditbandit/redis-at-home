@@ -13,7 +13,7 @@ func parseInput(d string) (string, []string) {
 	semiclean := strings.Split(d, "\r\n")
 	var cmd string
 	var cmdFound bool
-	supportedCmds := map[string]struct{}{"ping": {}, "echo": {}, "set": {}, "get": {}, "config": {}}
+	supportedCmds := map[string]struct{}{"ping": {}, "echo": {}, "set": {}, "get": {}, "config": {}, "info": {}}
 	var clean []string
 	for i := 1; i < len(semiclean); i++ {
 		if !strings.HasPrefix(semiclean[i], "$") {

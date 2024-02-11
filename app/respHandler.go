@@ -49,6 +49,15 @@ func respHandler(data []byte, dstream datastream, wg *sync.WaitGroup) []byte {
 			msg := fmt.Sprintf(resp, len(param), param, len(fName), fName)
 			return []byte(msg)
 		}
+	case "info":
+		param := parsed[1]
+		role := "role:master"
+		resp := "$%d\r\n%s\r\n"
+		switch param {
+		case "replication":
+			msg := fmt.Sprintf(resp, len(role), role)
+			return []byte(msg)
+		}
 	}
 	return []byte("+OK\r\n")
 }
