@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"strconv"
 	"sync"
 )
 
@@ -20,8 +21,12 @@ type datastream struct {
 var dirvar string
 var fName string
 var port int
+var host = "127.0.0.1"
+var rhost string
+var rport int
+var isSlave bool
 
-func main() {
+func init() {
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err)
@@ -30,8 +35,21 @@ func main() {
 	flag.StringVar(&dirvar, "dir", cwd, "directory")
 	flag.StringVar(&fName, "dbfilename", "dump.rdb", "name of the dump file")
 	flag.IntVar(&port, "port", 6379, "port")
+	flag.StringVar(&rhost, "replicaof", "", "host and port which should be mirrored")
 	flag.Parse()
-	ip := fmt.Sprintf("127.0.0.1:%d", port)
+
+	if len(flag.Args()) > 0 { // because flags pacakge cannot parse args like go run main.go --flag1 val0 --flag val1 val2 val3
+		isSlave = true
+		p, err := strconv.Atoi(flag.Arg(0))
+		if err != nil {
+			fmt.Printf("err: %v\n", err)
+		}
+		rport = p
+	}
+}
+
+func main() {
+	ip := fmt.Sprintf("%s:%d", host, port)
 	listner, err := net.Listen("tcp", ip)
 	fmt.Printf("Listening on : %v\n", ip)
 	var wg sync.WaitGroup
@@ -43,7 +61,7 @@ func main() {
 	}
 	go kvHandler(d) // start the kvhandler goroutine
 	if err != nil {
-		fmt.Println("Failed to bind to port 6379")
+        fmt.Printf("Failed to bind to port %d",port) 
 		os.Exit(1)
 	}
 	for {
@@ -82,25 +100,25 @@ func handleClient(conn net.Conn, wg *sync.WaitGroup, d datastream) {
 
 // kvHandler responsible for maintaining a dictionary of key value pairs
 func kvHandler(d datastream) {
-	redis := make(map[string]string)
+	dict := make(map[string]string)
 	redisBkp := make(map[string]string)
 	for {
 		select {
 		case k := <-d.set:
 			v := <-d.set
-			redis[k] = v
+			dict[k] = v
 		case k := <-d.get:
-			val, ok := redis[k]
+			val, ok := dict[k]
 			if ok {
 				d.resp <- val
 			} else {
 				d.resp <- "$-1\r\n"
 			}
 		case k := <-d.del:
-			val, ok := redis[k]
+			val, ok := dict[k]
 			if ok {
 				redisBkp[k] = val
-				delete(redis, k)
+				delete(dict, k)
 			}
 		}
 	}

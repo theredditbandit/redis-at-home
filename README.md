@@ -12,6 +12,8 @@
     - PX flag is supported
 - Full support for the [GET](https://redis.io/commands/get/) command
 
+# Ongoing 
+- working on adding support for replication
 
 # TODO
  - Write tests for existing commands

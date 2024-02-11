@@ -51,7 +51,12 @@ func respHandler(data []byte, dstream datastream, wg *sync.WaitGroup) []byte {
 		}
 	case "info":
 		param := parsed[1]
-		role := "role:master"
+		var role string
+		if !isSlave {
+			role = "role:master"
+		} else {
+			role = "role:slave"
+		}
 		resp := "$%d\r\n%s\r\n"
 		switch param {
 		case "replication":
@@ -60,4 +65,24 @@ func respHandler(data []byte, dstream datastream, wg *sync.WaitGroup) []byte {
 		}
 	}
 	return []byte("+OK\r\n")
+}
+
+// parseInput cleans the given resp array and returns a go array
+func parseInput(d string) (string, []string) {
+	semiclean := strings.Split(d, "\r\n")
+	var cmd string
+	var cmdFound bool
+	supportedCmds := map[string]struct{}{"ping": {}, "echo": {}, "set": {}, "get": {}, "config": {}, "info": {}}
+	var clean []string
+	for i := 1; i < len(semiclean); i++ {
+		if !strings.HasPrefix(semiclean[i], "$") {
+			w := strings.ToLower(semiclean[i])
+			clean = append(clean, w)
+			if _, ok := supportedCmds[w]; ok && !cmdFound {
+				cmd = w
+				cmdFound = true
+			}
+		}
+	}
+	return cmd, clean
 }
