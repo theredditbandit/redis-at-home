@@ -61,7 +61,7 @@ func main() {
 	}
 	go kvHandler(d) // start the kvhandler goroutine
 	if err != nil {
-        fmt.Printf("Failed to bind to port %d",port) 
+		fmt.Printf("Failed to bind to port %d", port)
 		os.Exit(1)
 	}
 	for {
@@ -90,7 +90,6 @@ func handleClient(conn net.Conn, wg *sync.WaitGroup, d datastream) {
 			fmt.Println("Error reading:", err.Error())
 		}
 		resp := respHandler(data, d, wg)
-
 		_, err = conn.Write(resp)
 		if err != nil {
 			fmt.Println("Error sending data:", err.Error())
