@@ -22,8 +22,8 @@ var dirvar string
 var fName string
 var port int
 var host = "127.0.0.1"
-var rhost string
-var rport int
+var mhost string // master host
+var mport int    // master port
 var isSlave bool
 
 func init() {
@@ -35,7 +35,7 @@ func init() {
 	flag.StringVar(&dirvar, "dir", cwd, "directory")
 	flag.StringVar(&fName, "dbfilename", "dump.rdb", "name of the dump file")
 	flag.IntVar(&port, "port", 6379, "port")
-	flag.StringVar(&rhost, "replicaof", "", "host and port which should be mirrored")
+	flag.StringVar(&mhost, "replicaof", "", "host and port which should be mirrored")
 	flag.Parse()
 
 	if len(flag.Args()) > 0 { // because flags pacakge cannot parse args like go run main.go --flag1 val0 --flag val1 val2 val3
@@ -44,7 +44,10 @@ func init() {
 		if err != nil {
 			fmt.Printf("err: %v\n", err)
 		}
-		rport = p
+		mport = p
+	}
+	if isSlave {
+		shakeHands(mhost, mport)
 	}
 }
 
