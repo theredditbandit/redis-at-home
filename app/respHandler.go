@@ -68,11 +68,9 @@ func respHandler(data []byte, dstream datastream, wg *sync.WaitGroup) []byte {
 				masterReplOffset := fmt.Sprintf("master_repl_offset:%d", offset)
 				dataLen := len(role) + len(masterReplID) + len(masterReplOffset) + 4 // 4 for 2 CRLF sequeces that occour in the middle. begining and ending CRLF need not be counted.
 				msg = fmt.Sprintf(resp, dataLen, role, masterReplID, masterReplOffset)
-				fmt.Println(msg)
 			case "role:slave":
 				resp := "$%d\r\n%s\r\n"
 				msg = fmt.Sprintf(resp, len(role), role)
-				fmt.Println(msg)
 			}
 		}
 		return []byte(msg)
