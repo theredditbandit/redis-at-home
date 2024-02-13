@@ -15,6 +15,7 @@ func respHandler(data []byte, dstream datastream, wg *sync.WaitGroup) []byte {
 	case "ping":
 		return []byte(defaultPong)
 	case "echo":
+		fmt.Println(parsed)
 		msg := fmt.Sprintf("+%v\r\n", parsed[1])
 		return []byte(msg)
 	case "set":
@@ -74,6 +75,9 @@ func respHandler(data []byte, dstream datastream, wg *sync.WaitGroup) []byte {
 			}
 		}
 		return []byte(msg)
+	case "ok":
+		fmt.Println("Ok")
+		return []byte("$0\r\n\r\n") // return empty string
 	}
 	return []byte("+OK\r\n")
 }
@@ -83,7 +87,7 @@ func parseInput(d string) (string, []string) {
 	semiclean := strings.Split(d, "\r\n")
 	var cmd string
 	var cmdFound bool
-	supportedCmds := map[string]struct{}{"ping": {}, "echo": {}, "set": {}, "get": {}, "config": {}, "info": {}}
+	supportedCmds := map[string]struct{}{"ping": {}, "echo": {}, "set": {}, "get": {}, "config": {}, "info": {}, "OK": {}}
 	var clean []string
 	for i := 1; i < len(semiclean); i++ {
 		if !strings.HasPrefix(semiclean[i], "$") {

@@ -25,6 +25,7 @@ var host = "127.0.0.1"
 var mhost string // master host
 var mport int    // master port
 var isSlave bool
+var wg sync.WaitGroup
 
 func init() {
 	cwd, err := os.Getwd()
@@ -47,7 +48,8 @@ func init() {
 		mport = p
 	}
 	if isSlave {
-		shakeHands(mhost, mport)
+		go shakeHands(mhost, mport, &wg)
+		wg.Add(1)
 	}
 }
 
@@ -55,7 +57,6 @@ func main() {
 	ip := fmt.Sprintf("%s:%d", host, port)
 	listner, err := net.Listen("tcp", ip)
 	fmt.Printf("Listening on : %v\n", ip)
-	var wg sync.WaitGroup
 	d := datastream{
 		set:  make(chan string, 2),
 		get:  make(chan string),
