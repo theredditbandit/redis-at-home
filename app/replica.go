@@ -16,6 +16,16 @@ func shakeHands(mhost string, mport int, wg *sync.WaitGroup) {
 	}
 	pingMaster(conn)
 	sendREPLCONF(conn)
+	sendPSYNC(conn)
+
+}
+
+func sendPSYNC(conn net.Conn) {
+	psyncMsg := "*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n"
+	_, err := conn.Write([]byte(psyncMsg))
+	if err != nil {
+		fmt.Printf("err while psync: %v\n", err)
+	}
 }
 
 func sendREPLCONF(conn net.Conn) {

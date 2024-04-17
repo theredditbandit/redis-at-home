@@ -78,6 +78,8 @@ func respHandler(data []byte, dstream datastream, wg *sync.WaitGroup) []byte {
 	case "ok":
 		fmt.Println("Ok")
 		return []byte("$0\r\n\r\n") // return empty string
+	case "fullresync":
+		fmt.Printf("parsed: %v\n", parsed)
 	}
 	return []byte("+OK\r\n")
 }
@@ -87,7 +89,7 @@ func parseInput(d string) (string, []string) {
 	semiclean := strings.Split(d, "\r\n")
 	var cmd string
 	var cmdFound bool
-	supportedCmds := map[string]struct{}{"ping": {}, "echo": {}, "set": {}, "get": {}, "config": {}, "info": {}, "OK": {}}
+	supportedCmds := map[string]struct{}{"ping": {}, "echo": {}, "set": {}, "get": {}, "config": {}, "info": {}, "OK": {}, "FULLRESYNC": {}}
 	var clean []string
 	for i := 1; i < len(semiclean); i++ {
 		if !strings.HasPrefix(semiclean[i], "$") {
